@@ -7,7 +7,9 @@ import sys
 import pprint
 
 class Parser(object):
-    """docstring for Parser"""
+    """Retrieves the data from the API and parses it.
+
+    """
     def __init__(self):
         # Blah blah httpconnection, load crap....
         file = open('../data.txt', 'r')
@@ -17,6 +19,12 @@ class Parser(object):
         self.data = json.loads(self.data)
 
     def core_trees(self, data):
+        """Returns the core project directory tree structure.
+
+        Args:
+            data: The actual data to retrieve the root directory from.
+
+        """
         _return = {}
 
         for directory in data:
@@ -29,13 +37,18 @@ class Parser(object):
         return _return
 
     def return_trees(self, data, tree):
+        """Returns any subtree from the dictionary data.
+
+        Args:
+            data: The dictionary to retrieve items from.
+            tree: What tree to retrieve?
+
+        """
         subdirs = tree.split('/')
-        #print subdirs
         _return = []
 
         data = reduce(dict.get, subdirs, data)
-        if not data:
-            #return _return.append('(There is nothing in here)')
+        if not data: # If there is nothing return None. How convenient.
             return None
 
         for k, v in data.iteritems():
@@ -43,14 +56,27 @@ class Parser(object):
                 continue
             # Add to output.
             #_return.append(tree + k)
-            _return.append('%s/%s' % (tree, k))
+            _return.append('%s/%s' % (tree, k)) # Return the full absolute path which will get spliced later on.
         return _return
 
     def return_leaves(self, data, tree):
+        """Returns any leaves (trees AND files) from the dictionary data.
+
+        Args:
+            data: The dictionary to retrieve items from.
+            tree: What tree to retrieve?
+
+        """
         subdirs = tree.split('/')
         return reduce(dict.get, subdirs, data)
 
     def root_trees(self, data):
+        """Returns the root tree.
+
+        Args:
+            data: The dictionary to retrieve items from.
+
+        """
         _return = []
         for k, v in data.iteritems():
             if not k == '__root__': _return.append(k)
@@ -58,11 +84,21 @@ class Parser(object):
         return _return
 
     def count_tree(self, data, tree):
+        """Counts how many files there are in a given tree.
+
+        Args:
+            data: The dictionary to retrieve items from.
+            tree: What tree to retrieve?
+
+        """
         pass
 
     def parse(self):
-        trees = []
-        blobs = {}
+        """Parses JSON to infinite level dictionaries.
+
+        """
+        trees = [] # Directories
+        blobs = {} # Files
 
         for object in self.data['tree']:
             if object['type'] == 'tree': # Add to tree list
