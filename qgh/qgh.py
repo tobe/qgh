@@ -102,6 +102,7 @@ class QGH(object):
             ('body','dark blue', '', 'standout'),
             ('folder', 'light magenta', '', 'standout'),
             ('focus','dark red', '', 'standout'),
+            ('footer', 'light red', 'black', 'standout'),
             ('head','light red', 'black'),
         ]
 
@@ -117,6 +118,7 @@ class QGH(object):
         # Set up class vars
         self.elements        = [] # Actual ItemWidget elements
         self.last_dir        = '' # Last directory
+        self.current_view    = '1: main'
 
         # Grab the directories from the root project and pass them onto the ItemWidget
         i = 0
@@ -127,7 +129,7 @@ class QGH(object):
 
         # Now do the same for files.
         i = 0
-        for k, v in self.parser.return_leaves(self.data, '__root__').iteritems():
+        for k, v in sorted(self.parser.return_leaves(self.data, '__root__').iteritems()):
             element = ItemWidget(i, k, v['size'], v['type'], v['url'])
             self.elements.append(element)
             i = i+1
@@ -138,7 +140,9 @@ class QGH(object):
 
         # Initialize urwid!
         self.head       = urwid.AttrMap(urwid.Text('selected:'), 'head')
-        self.foot       = urwid.AttrMap(urwid.Text('q Q - exit        enter- void         b - return the list'), 'head')
+        #self.foot       = urwid.AttrMap(urwid.Text('q Q - exit        enter- void         b - return the list'), 'head')
+        footer_text     = ['qgh 1.0    ', 'q Q - exit    ', 'enter - traverse dir     ', 'b - return the list']
+        self.foot       = urwid.AttrMap(urwid.Text(footer_text), 'footer')
         self.walker     = urwid.SimpleListWalker(self.elements)
         self.listbox    = urwid.ListBox(self.walker)
         self.view       = urwid.Frame(urwid.AttrWrap(self.listbox, 'body'), header=self.head, footer=self.foot)
@@ -226,9 +230,10 @@ class QGH(object):
         """Called whenever the walker updates, e.g. user presses key.
 
         """
-        self.focus = self.listbox.get_focus()[0].content
-        #self.view.set_header(urwid.AttrWrap(urwid.Text('selected: %s' % str(self.focus)), 'head'))
-        #self.view.set_footer(urwid.AttrWrap(urwid.Text('selected: %s' % str(self.focus)), 'head'))
+        #self.focus = self.listbox.get_focus()[0].content
+        #self.view.set_header(urwid.AttrWrap(urwid.Text('selected: %s' % str(self.focus)), 'head')
+
+        self.view.set_footer(urwid.AttrWrap(urwid.Text(self.current_view), 'footer', 'focus'))
 
     def handle_root_directory(self):
         """Restores the original root directory contents when called.
@@ -260,7 +265,7 @@ class QGH(object):
         i = 0
         self.elements.append(ItemWidget(i, '../')) # Append ../ so we can go back lol
         if trees:
-            for directory in trees:
+            for directory in sorted(trees):
                 #element = ItemWidget(i, directory + '/')
                 element = ItemWidget(i, directory.split('/')[-1] + '/') # We're just interested in the last subdir. And just append / to it.
                 self.elements.append(element)
@@ -270,7 +275,7 @@ class QGH(object):
         if not leaves:
             self.elements.append(ItemWidget(0, '../'))
         else:
-            for k, v in leaves.iteritems():
+            for k, v in sorted(leaves.iteritems()):
                 if not 'url' in v: continue # Not a file. Skipped!
                 element = ItemWidget(i, k, v['size'], v['type'], v['url'])
                 self.elements.append(element)

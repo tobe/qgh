@@ -81,6 +81,7 @@ class Parser(object):
         for k, v in data.iteritems():
             if not k == '__root__': _return.append(k)
 
+        _return.sort()
         return _return
 
     def count_tree(self, data, tree):
