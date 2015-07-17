@@ -1,0 +1,7 @@
+__productname__ = 'qgh'
+__version__ = '1.0'
+__author__ = 'infyhr'
+__author_email__ = 'infy@cybershade.org'
+__description__ = 'Just a quick github repo browser.'
+__url__ = '???'
+__license__ = 'MIT'
