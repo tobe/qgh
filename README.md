@@ -1,6 +1,8 @@
 ### qgh
 Console curses browser for github repo contents.
 
+![Screenshot](https://raw.githubusercontent.com/infyhr/qgh/master/screenshot.png "Screenshot")
+
 ### requirements
 * httplib
 * urwid
