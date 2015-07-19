@@ -11,11 +11,45 @@ class Parser(object):
     """Retrieves the data from the API and parses it.
 
     """
+
+    def __init__(self, user, repository, branch):
+        print(user, repository, branch)
+
+        # First, get the sha_hash
+        data = self._query_api('/repos/%s/%s/git/refs/heads/%s' % (user, repository, branch))
+
+        if not 'sha' in data['object']:
+            print('Received unknown JSON. Could not find the sha hash.')
+            sys.exit()
+
+        sha_hash = data['object']['sha']
+        # Inform the user about what's going on before urwid launches
+        self._write_flushed('Got URL: %s' % (data['url']))
+        self._write_flushed('Got SHA: %s' % (sha_hash))
+        self._write_flushed('Requesting recursive project tree...')
+
+        # Now that we've got our SHA, we can send an actual request for the repository tree
+        self.data = self._query_api('https://api.github.com/repos/%s/%s/git/trees/%s?recursive=1' % (user, repository, sha_hash))
+
+        self._write_flushed('Launching the user interface NOW!')
+
     def _write_flushed(self, data):
+        """Writes to stdout and then flushes the output for live updates about fetching data.
+
+        Args:
+            data: What to print out to stdout.
+
+        """
         sys.stdout.write('%s\n' % (data))
         sys.stdout.flush()
 
     def _query_api(self, url):
+        """Queries the Github API and returns a JSON parsed string.
+
+        Args:
+            url: Full API url request.
+
+        """
         try:
             # Create a HTTPLib object
             conn = httplib.HTTPSConnection('api.github.com')
@@ -43,27 +77,6 @@ class Parser(object):
         except httplib.HTTPException as e:
             print 'HTTPLib error: %s' % str(e)
             sys.exit()
-
-    def __init__(self, user, repository, branch):
-        print(user, repository, branch)
-
-        # First, get the sha_hash
-        data = self._query_api('/repos/%s/%s/git/refs/heads/%s' % (user, repository, branch))
-
-        if not 'sha' in data['object']:
-            print('Received unknown JSON. Could not find the sha hash.')
-            sys.exit()
-
-        sha_hash = data['object']['sha']
-        # Inform the user about what's going on before urwid launches
-        self._write_flushed('Got URL: %s' % (data['url']))
-        self._write_flushed('Got SHA: %s' % (sha_hash))
-        self._write_flushed('Requesting recursive project tree...')
-
-        # Now that we've got our SHA, we can send an actual request for the repository tree
-        self.data = self._query_api('https://api.github.com/repos/%s/%s/git/trees/%s?recursive=1' % (user, repository, sha_hash))
-
-        self._write_flushed('Launching the user interface NOW!')
 
     def core_trees(self, data):
         """Returns the core project directory tree structure.
