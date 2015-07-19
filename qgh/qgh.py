@@ -8,6 +8,7 @@ import urwid
 import sys
 import random
 import pprint
+import argparse
 from parser import Parser
 
 class FooterEdit(urwid.Edit):
@@ -106,8 +107,22 @@ class QGH(object):
             ('head','light red', 'black'),
         ]
 
-        # Delare the parser class
-        self.parser = Parser()
+        # Grab the user/repository
+        arg_parser = argparse.ArgumentParser(description='Console curses browser for github repo contents.')
+        arg_parser.add_argument('remote', help='Remote repository in the following format: user/branch. Example: infyhr/qgh')
+        arg_parser.add_argument('branch', nargs='?', default='master', help='The branch to look up. By default this is "master".')
+        args = arg_parser.parse_args()
+
+        # See if we can find / in the remote argument.
+        print(args.remote)
+        if '/' not in args.remote:
+            raise ValueError('Remote user/repository supplied in wrong format. Cannot find "/".')
+
+        # Split it by / so we can determine the user and the branch itself.
+        remote = args.remote.split('/')
+
+        # Pass it onto the Parser object.
+        self.parser = Parser(remote[0], remote[1], args.branch)
         # Grab the data
         self.data   = self.parser.parse()
         # Grab leaves from the data
@@ -140,7 +155,6 @@ class QGH(object):
 
         # Initialize urwid!
         self.head       = urwid.AttrMap(urwid.Text('selected:'), 'head')
-        #self.foot       = urwid.AttrMap(urwid.Text('q Q - exit        enter- void         b - return the list'), 'head')
         footer_text     = ['qgh 1.0    ', 'q Q - exit    ', 'enter - traverse dir     ', 'b - return the list']
         self.foot       = urwid.AttrMap(urwid.Text(footer_text), 'footer')
         self.walker     = urwid.SimpleListWalker(self.elements)
@@ -178,7 +192,6 @@ class QGH(object):
                     self.handle_root_directory() # Then handle it accordingly.
                 else:
                     self.handle_directory() # It's not root dir, handle it normally.
-
                 return
 
             # Ends with /, must be a 'normal' directory then.
@@ -189,7 +202,7 @@ class QGH(object):
                 self.handle_directory() # Handle the directory here.
                 return
 
-            # It's a file! Do its thing here.
+            # It's not a directory nor we're moving up a level. So it's a file then?
             # infy@A780LM-M: this should popen or something where user wants.
             #self.handle_file() # Handle the file!
             pass
@@ -295,4 +308,13 @@ class QGH(object):
         # Finally, set the body.
         self.view.set_body(self.listbox)
 
-QGH()
+
+if __name__ == '__main__':
+    try:
+        QGH()
+    except KeyboardInterrupt:
+        print('^C caught, exiting...')
+    except ValueError as e:
+        print('ValueError: ' + str(e))
+    #except Parser.HTTPExecption:
+    #   ...

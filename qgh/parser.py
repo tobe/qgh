@@ -5,18 +5,65 @@
 import json
 import sys
 import pprint
+import httplib
 
 class Parser(object):
     """Retrieves the data from the API and parses it.
 
     """
-    def __init__(self):
-        # Blah blah httpconnection, load crap....
-        file = open('../data.txt', 'r')
-        self.data = file.read()
-        file.close()
+    def _write_flushed(self, data):
+        sys.stdout.write('%s\n' % (data))
+        sys.stdout.flush()
 
-        self.data = json.loads(self.data)
+    def _query_api(self, url):
+        try:
+            # Create a HTTPLib object
+            conn = httplib.HTTPSConnection('api.github.com')
+
+            # Define the UA, because Github asks so.
+            headers = {'User-Agent': 'qgh/1.0'}
+
+            # Try to retrieve the sha of the given repository
+            conn.request('GET', url, headers=headers)
+
+            # Get the response
+            response = conn.getresponse()
+
+            # Query the status code
+            if response.status != 200:
+                raise httplib.HTTPException('Did not receive 200 OK, received %s %s instead. Exiting...' % (str(response.status), response.reason))
+
+            # Read and decode the data, find the hash.
+            data = response.read()
+            if not data or len(data) == 0:
+                raise httplib.HTTPException('No data received, len(data) = %d', len(data))
+
+            data = json.loads(data)
+            return data
+        except httplib.HTTPException as e:
+            print 'HTTPLib error: %s' % str(e)
+            sys.exit()
+
+    def __init__(self, user, repository, branch):
+        print(user, repository, branch)
+
+        # First, get the sha_hash
+        data = self._query_api('/repos/%s/%s/git/refs/heads/%s' % (user, repository, branch))
+
+        if not 'sha' in data['object']:
+            print('Received unknown JSON. Could not find the sha hash.')
+            sys.exit()
+
+        sha_hash = data['object']['sha']
+        # Inform the user about what's going on before urwid launches
+        self._write_flushed('Got URL: %s' % (data['url']))
+        self._write_flushed('Got SHA: %s' % (sha_hash))
+        self._write_flushed('Requesting recursive project tree...')
+
+        # Now that we've got our SHA, we can send an actual request for the repository tree
+        self.data = self._query_api('https://api.github.com/repos/%s/%s/git/trees/%s?recursive=1' % (user, repository, sha_hash))
+
+        self._write_flushed('Launching the user interface NOW!')
 
     def core_trees(self, data):
         """Returns the core project directory tree structure.
