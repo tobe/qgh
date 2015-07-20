@@ -9,6 +9,7 @@ import sys
 import random
 import pprint
 import argparse
+import subprocess
 from parser import Parser
 from config import Config
 
@@ -150,7 +151,7 @@ class QGH(object):
 
         # Initialize urwid!
         self.head       = urwid.AttrMap(urwid.Text('selected:'), 'head')
-        footer_text     = ['qgh 1.0    ', 'q Q - exit    ', 'enter - traverse dir     ', 'b - return the list']
+        footer_text     = ['qgh 1.0 ー', ' %s' % (self.parser.time_taken)]
         self.foot       = urwid.AttrMap(urwid.Text(footer_text), 'footer')
         self.walker     = urwid.SimpleListWalker(self.elements)
         self.listbox    = urwid.ListBox(self.walker)
@@ -170,6 +171,8 @@ class QGH(object):
             input: The keystroke itself.
 
         """
+        self.focus = self.listbox.get_focus()[0].content # Grab the focused element
+
         if input in ('q', 'Q'):
             raise urwid.ExitMainLoop()
 
@@ -189,8 +192,6 @@ class QGH(object):
             self.handle_files()
 
         if input == 'enter':
-            self.focus = self.listbox.get_focus()[0].content # Grab the focused element
-
             # Go UP
             if self.focus == '../':
                 self.last_dir = self.last_dir[:-1].split('/') # Split it by /
@@ -216,8 +217,7 @@ class QGH(object):
                 return
 
             # It's not a directory nor we're moving up a level. So it's a file then?
-            # infy@A780LM-M: this should popen or something where user wants.
-            #self.handle_file() # Handle the file!
+            self.handle_file()
             pass
 
         # Testing, plz ignore
@@ -327,6 +327,18 @@ class QGH(object):
         # Call to update the footer manually?
         self.update()
         self.view.set_body(urwid.Filler(urwid.Text('hi'), 'top'))
+
+    def handle_file(self):
+        self.temp = 'vim %s'
+        if self.last_dir == '': # This means root.
+            key = '__root__/%s' % (self.focus)
+        else:
+            key = self.last_dir + self.focus
+
+        print('LEAVES', self.parser.return_leaves(self.data, key))
+        #print('FROM __root__: ', self.data['__root__'][self.focus])
+
+        sys.exit()
 
 
 if __name__ == '__main__':

@@ -7,6 +7,8 @@ import json
 import sys
 import pprint
 import httplib
+import time
+import datetime
 
 class Parser(object):
     """Retrieves the data from the API and parses it.
@@ -14,8 +16,10 @@ class Parser(object):
     """
 
     def __init__(self, user, repository, branch):
+        self.started = int(time.time()) # For benchmarking I guess.
+
         # First, get the sha_hash
-        data = self._query_api('/repos/%s/%s/git/refs/heads/%s' % (user, repository, branch))
+        """data = self._query_api('/repos/%s/%s/git/refs/heads/%s' % (user, repository, branch))
 
         if not 'sha' in data['object']:
             print('Received unknown JSON. Could not find the sha hash.')
@@ -28,12 +32,15 @@ class Parser(object):
         self._write_flushed('Requesting recursive project tree...')
 
         # Now that we've got our SHA, we can send an actual request for the repository tree
-        self.data = self._query_api('https://api.github.com/repos/%s/%s/git/trees/%s?recursive=1' % (user, repository, sha_hash))
-        self._write_flushed('Launching the user interface NOW!')
+        self.data = self._query_api('https://api.github.com/repos/%s/%s/git/trees/%s?recursive=1' % (user, repository, sha_hash))"""
 
-        """with open('data.txt', 'r') as ff:
+        # Just display some statistics.
+        self.time_taken = datetime.datetime.fromtimestamp(int(time.time())-self.started).strftime('%-Mm %ss')
+        self._write_flushed('Done, took me %s' % self.time_taken)
+
+        with open('data.txt', 'r') as ff:
             self.data = json.loads(ff.read())
-            ff.close()"""
+            ff.close()
 
     def _write_flushed(self, data):
         """Writes to stdout and then flushes the output for live updates about fetching data.
