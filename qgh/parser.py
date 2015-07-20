@@ -77,7 +77,7 @@ class Parser(object):
             data = json.loads(data)
             return data
         except httplib.HTTPException as e:
-            print 'HTTPLib error: %s' % str(e)
+            print 'HTTPLib error: %s\nFailed lookup for URL %s' % str(e, url)
             sys.exit()
 
     def core_trees(self, data):

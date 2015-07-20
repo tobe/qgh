@@ -110,7 +110,6 @@ class QGH(object):
         self.palette = self.config.get_palette()
 
         # See if we can find / in the remote argument.
-        print(args.remote)
         if '/' not in args.remote:
             raise ValueError('Remote user/repository supplied in wrong format. Cannot find "/".')
 
@@ -173,6 +172,21 @@ class QGH(object):
         """
         if input in ('q', 'Q'):
             raise urwid.ExitMainLoop()
+
+        if input == '1':
+            self.current_view = '1: main'
+            self.update()
+            self.handle_root_directory()
+
+        if input == '2':
+            self.current_view = '2: trees'
+            self.update()
+            self.handle_trees()
+
+        if input == '3':
+            self.current_view = '3: files'
+            self.update()
+            self.handle_files()
 
         if input == 'enter':
             self.focus = self.listbox.get_focus()[0].content # Grab the focused element
@@ -308,6 +322,11 @@ class QGH(object):
 
         # Finally, set the body.
         self.view.set_body(self.listbox)
+
+    def handle_trees(self):
+        # Call to update the footer manually?
+        self.update()
+        self.view.set_body(urwid.Filler(urwid.Text('hi'), 'top'))
 
 
 if __name__ == '__main__':

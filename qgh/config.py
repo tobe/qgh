@@ -41,6 +41,5 @@ class Config(object):
         ]
 
         pass
-    def _is_focused(self, view):
-        return 'view_focus' if view == self.current_view else 'view'
-        pass
+
+    def _is_focused(self, view): return 'view_focus' if view == self.current_view else 'view'
