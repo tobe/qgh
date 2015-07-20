@@ -16,4 +16,5 @@ First, it is recommended you create a Python [virtualenv](https://virtualenv.pyp
 
 Next, run `pip install -r requirements.txt` to install the necessary dependencies.
 
-To use qgh, run `python qgh/qgh.py`.
+To use qgh, run `python qgh/qgh.py user/repository [branch]`.
+Example given: `python qgh/qgh.py infyhr/qgh`. `master` is always the default branch and can be ommited then.
