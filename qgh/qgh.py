@@ -10,6 +10,7 @@ import random
 import pprint
 import argparse
 from parser import Parser
+from config import Config
 
 class FooterEdit(urwid.Edit):
     __metaclass__ = urwid.signals.MetaSignals
@@ -98,20 +99,15 @@ class QGH(object):
 
     """
     def __init__(self):
-        # Set the palette
-        self.palette = [
-            ('body','dark blue', '', 'standout'),
-            ('folder', 'light magenta', '', 'standout'),
-            ('focus','dark red', '', 'standout'),
-            ('footer', 'light red', 'black', 'standout'),
-            ('head','light red', 'black'),
-        ]
-
         # Grab the user/repository
         arg_parser = argparse.ArgumentParser(description='Console curses browser for github repo contents.')
         arg_parser.add_argument('remote', help='Remote repository in the following format: user/branch. Example: infyhr/qgh')
         arg_parser.add_argument('branch', nargs='?', default='master', help='The branch to look up. By default this is "master".')
         args = arg_parser.parse_args()
+
+        # Set the palette
+        self.config  = Config()
+        self.palette = self.config.get_palette()
 
         # See if we can find / in the remote argument.
         print(args.remote)
@@ -160,6 +156,9 @@ class QGH(object):
         self.walker     = urwid.SimpleListWalker(self.elements)
         self.listbox    = urwid.ListBox(self.walker)
         self.view       = urwid.Frame(urwid.AttrWrap(self.listbox, 'body'), header=self.head, footer=self.foot)
+
+        # Set the header to show root.
+        self.view.set_header(urwid.AttrWrap(urwid.Text('/'), 'head'))
 
         loop = urwid.MainLoop(self.view, self.palette, unhandled_input=self.handle_keystroke)
         urwid.connect_signal(self.walker, 'modified', self.update)
@@ -246,7 +245,9 @@ class QGH(object):
         #self.focus = self.listbox.get_focus()[0].content
         #self.view.set_header(urwid.AttrWrap(urwid.Text('selected: %s' % str(self.focus)), 'head')
 
-        self.view.set_footer(urwid.AttrWrap(urwid.Text(self.current_view), 'footer', 'focus'))
+        #self.view.set_footer(urwid.AttrWrap(urwid.Text(self.current_view, align='center'), 'footer', 'focus'))
+        footer_data = self.config.update_footer(self.current_view)
+        self.view.set_footer(urwid.AttrWrap(urwid.Text(footer_data, align='center'), 'footer', 'focus'))
 
     def handle_root_directory(self):
         """Restores the original root directory contents when called.

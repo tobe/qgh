@@ -1,5 +1,6 @@
 #!/usr/bin/python2
 # -*- coding: utf-8 -*-
+
 # Parser.
 
 import json
@@ -13,8 +14,6 @@ class Parser(object):
     """
 
     def __init__(self, user, repository, branch):
-        print(user, repository, branch)
-
         # First, get the sha_hash
         data = self._query_api('/repos/%s/%s/git/refs/heads/%s' % (user, repository, branch))
 
@@ -30,8 +29,11 @@ class Parser(object):
 
         # Now that we've got our SHA, we can send an actual request for the repository tree
         self.data = self._query_api('https://api.github.com/repos/%s/%s/git/trees/%s?recursive=1' % (user, repository, sha_hash))
-
         self._write_flushed('Launching the user interface NOW!')
+
+        """with open('data.txt', 'r') as ff:
+            self.data = json.loads(ff.read())
+            ff.close()"""
 
     def _write_flushed(self, data):
         """Writes to stdout and then flushes the output for live updates about fetching data.
