@@ -27,7 +27,7 @@ class Config(object):
             # Header
             ('head','light red', 'black'),
             # View in footer
-            ('view', 'light cyan', 'dark gray', 'underline'),
+            ('view', 'light cyan', 'black', 'underline'),
             # Focused view
             ('view_focus', 'light red', 'dark gray', 'underline')
         ]

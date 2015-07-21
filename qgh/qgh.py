@@ -10,8 +10,13 @@ import random
 import pprint
 import argparse
 import subprocess
+import base64
+import os
 from parser import Parser
 from config import Config
+
+class AppError(Exception):
+    pass
 
 class FooterEdit(urwid.Edit):
     __metaclass__ = urwid.signals.MetaSignals
@@ -112,15 +117,20 @@ class QGH(object):
 
         # See if we can find / in the remote argument.
         if '/' not in args.remote:
-            raise ValueError('Remote user/repository supplied in wrong format. Cannot find "/".')
+            raise AppError('Remote user/repository supplied in wrong format. Cannot find "/".')
 
         # Split it by / so we can determine the user and the branch itself.
         remote = args.remote.split('/')
 
+        # Set them here
+        self.user       = remote[0]
+        self.repository = remote[1]
+        self.branch     = args.branch
+
         # Pass it onto the Parser object.
-        self.parser = Parser(remote[0], remote[1], args.branch)
+        self.parser = Parser(self.user, self.repository, self.branch)
         # Grab the data
-        self.data   = self.parser.parse()
+        self.data = self.parser.parse()
         # Grab leaves from the data
         leaves = self.parser.return_leaves(self.data, '__root__')
         # Grab trees from the data
@@ -160,9 +170,9 @@ class QGH(object):
         # Set the header to show root.
         self.view.set_header(urwid.AttrWrap(urwid.Text('/'), 'head'))
 
-        loop = urwid.MainLoop(self.view, self.palette, unhandled_input=self.handle_keystroke)
+        self.loop = urwid.MainLoop(self.view, self.palette, unhandled_input=self.handle_keystroke)
         urwid.connect_signal(self.walker, 'modified', self.update)
-        loop.run()
+        self.loop.run()
 
     def handle_keystroke(self, input):
         """Handles keystrokes in the main interface and then runs the needed function.
@@ -329,17 +339,74 @@ class QGH(object):
         self.view.set_body(urwid.Filler(urwid.Text('hi'), 'top'))
 
     def handle_file(self):
-        self.temp = 'vim %s'
+        self.temp = '/usr/bin/gvim %s'
         if self.last_dir == '': # This means root.
-            key = '__root__/%s' % (self.focus)
+            key        = '__root__/%s' % (self.focus)
+            future_dir = '' # So we can restore the directory later on
         else:
             key = self.last_dir + self.focus
+            future_dir = self.last_dir
 
-        print('LEAVES', self.parser.return_leaves(self.data, key))
-        #print('FROM __root__: ', self.data['__root__'][self.focus])
+        file_leaves = self.parser.return_leaves(self.data, key)
+        if not file_leaves:
+            raise AppError('Could not grab the file URL.')
 
-        sys.exit()
+        # Remove the file from the key
+        _directory = key.split('/')[:-1]
+        _directory = '/'.join([str(i) for i in _directory])
 
+        # Construct a directory path
+        file_directory  = '/tmp/%s/%s/%s/%s' % (self.user, self.repository, self.branch, _directory)
+
+        # Create the directory if it doesn't exist
+        if not os.path.isdir(file_directory):
+            os.makedirs(file_directory)
+
+        file_location = '/tmp/%s/%s/%s/%s' % (self.user, self.repository, self.branch, key)
+
+        # Set the header so we inform the user we are doing something
+        self.view.set_header(urwid.AttrWrap(urwid.Text('Opening %s...' % (file_location)), 'head'))
+
+        # Query the API...
+        result = self.parser._query_api(file_leaves['url'])
+
+        # If there's no content in the result then we've got a problem here...
+        if not 'content' in result:
+            raise AppError('There is no content in the ')
+
+        try:
+            # Now we need to create this file in /tmp
+            file_location = '/tmp/%s/%s/%s/%s' % (self.user, self.repository, self.branch, key)
+            fp = open(file_location, 'w')
+
+            # Check whether it's raw or base64 encoded and write accordingly.
+            if result['encoding'] == 'base64':
+                fp.write(base64.b64decode(result['content']))
+            else:
+                fp.write(result['content'])
+
+            # Flush so subprocess.call doesn't bitch about it
+            fp.flush()
+
+            # Now that we're done close the file.
+            fp.close()
+
+        except (OSError, IOError) as e:
+            print('Unable to create/write to temp file: %s', str(e))
+
+        # And open it in the editor using the editor string provided by the user.
+        #subprocess.call(self.temp % (file_location))
+        subprocess.call('vim %s' % (file_location), shell=True)
+
+        # Redraw or it's messed up
+        self.loop.draw_screen()
+
+        # Restore the directory
+        self.focus    = future_dir
+        self.last_dir = self.focus
+
+        # And now reset the body
+        self.handle_directory()
 
 if __name__ == '__main__':
     try:
@@ -348,5 +415,7 @@ if __name__ == '__main__':
         print('^C caught, exiting...')
     except ValueError as e:
         print('ValueError: ' + str(e))
+    except AppError as e:
+        print('qgh error: ' + str(e))
     #except Parser.HTTPExecption:
     #   ...
