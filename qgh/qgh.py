@@ -334,8 +334,6 @@ class QGH(object):
         self.view.set_body(self.listbox)
 
     def handle_trees(self):
-        # Call to update the footer manually?
-        self.update()
         self.view.set_body(urwid.Filler(urwid.Text('hi'), 'top'))
 
     def handle_file(self):
