@@ -11,11 +11,10 @@ Console curses browser for github repo contents.
 ### features
 * Display all files and directories from a given repository and browse through them in a curses TUI
 * Branch support
-* Open files in user set editor (vim, for example)
+* Open files in your favorite editor.
 
 #### todo
-* Count entries in tree
-* logger
+* logger view
 
 #### maybe sometime in future
 * List separately files and dirs

@@ -327,8 +327,13 @@ class QGH(object):
         # Connect the signal so that we can update the header/footer later.
         urwid.connect_signal(self.walker, 'modified', self.update)
 
-        # Set the header to the current directory so the user knows where they are.
-        self.view.set_header(urwid.AttrWrap(urwid.Text(str(self.focus)), 'head'))
+        # Set the header to the current directory so the user knows where they are. Also display how many items are there.
+        #self.view.set_header(urwid.AttrWrap(urwid.Text(str(self.focus)), 'head'))
+        self.view.set_header(urwid.AttrWrap(urwid.Columns([
+            urwid.Text(str(self.focus), align='left'),
+            urwid.Text('%s item(s)' % (len(leaves)), align='right')
+        ]), 'head'))
+        #self.view.set_header(urwid.AttrWrap(urwid.Text('%s | %'), 'head'))
 
         # Finally, set the body.
         self.view.set_body(self.listbox)
@@ -394,7 +399,7 @@ class QGH(object):
 
         # And open it in the editor using the editor string provided by the user.
         #subprocess.call(self.temp % (file_location))
-        subprocess.call('vim %s' % (file_location), shell=True)
+        subprocess.call(self.temp % (file_location), shell=True)
 
         # Redraw or it's messed up
         self.loop.draw_screen()
@@ -415,5 +420,3 @@ if __name__ == '__main__':
         print('ValueError: ' + str(e))
     except AppError as e:
         print('qgh error: ' + str(e))
-    #except Parser.HTTPExecption:
-    #   ...
