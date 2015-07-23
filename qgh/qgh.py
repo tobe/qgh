@@ -170,7 +170,10 @@ class QGH(object):
         self.view       = urwid.Frame(urwid.AttrWrap(self.listbox, 'body'), header=self.head, footer=self.foot)
 
         # Set the header to show root.
-        self.view.set_header(urwid.AttrWrap(urwid.Text('/'), 'head'))
+        self.view.set_header(urwid.AttrWrap(urwid.Columns([
+            urwid.Text('/', align='left'),
+            urwid.Text('%s item(s)' % (len(self.root_elements)), align='right')
+        ]), 'head'))
 
         self.loop = urwid.MainLoop(self.view, self.palette, unhandled_input=self.handle_keystroke)
         urwid.connect_signal(self.walker, 'modified', self.update)
@@ -294,7 +297,12 @@ class QGH(object):
 
         urwid.connect_signal(self.walker, 'modified', self.update)
 
-        self.view.set_header(urwid.AttrWrap(urwid.Text('/'), 'head'))
+        #self.view.set_header(urwid.AttrWrap(urwid.Text('/'), 'head'))
+        self.view.set_header(urwid.AttrWrap(urwid.Columns([
+            urwid.Text('/', align='left'),
+            urwid.Text('%s item(s)' % (len(self.root_elements)), align='right')
+        ]), 'head'))
+
         self.view.set_body(self.listbox)
 
     def handle_directory(self):
@@ -385,7 +393,7 @@ class QGH(object):
 
         # If there's no content in the result then we've got a problem here...
         if not 'content' in result:
-            raise AppError('There is no content in the ')
+            raise AppError('There is no content in the API response!')
 
         try:
             # Now we need to create this file in /tmp

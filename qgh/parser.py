@@ -82,6 +82,9 @@ class Parser(object):
                 raise httplib.HTTPException('No data received, len(data) = %d', len(data))
 
             data = json.loads(data)
+
+            conn.close()
+
             return data
         except httplib.HTTPException as e:
             print 'HTTPLib error: %s\nFailed lookup for URL %s' % (str(e), url)
