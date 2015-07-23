@@ -138,8 +138,10 @@ class QGH(object):
 
         # Set up class vars
         self.elements        = [] # Actual ItemWidget elements
-        self.last_dir        = '' # Last directory
-        self.current_view    = '1: main'
+        self.last_dir        = '' # Last directory. Used for everything pretty much.
+        self.current_dir     = None # Current directory. Used for resetting focus.
+        self.current_view    = '1: main' # Current view
+        self.last_id         = 0 # Last ID of the previous directory (ItemWalker)
 
         # Grab the directories from the root project and pass them onto the ItemWidget
         i = 0
@@ -202,6 +204,8 @@ class QGH(object):
             self.handle_files()
 
         if input == 'enter':
+            if self.focus != '../': self.current_dir = self.focus # Set the current directory.
+
             # Go UP
             if self.focus == '../':
                 self.last_dir = self.last_dir[:-1].split('/') # Split it by /
@@ -216,6 +220,9 @@ class QGH(object):
                     self.handle_root_directory() # Then handle it accordingly.
                 else:
                     self.handle_directory() # It's not root dir, handle it normally.
+
+                    # Reset focus
+                    self.reset_focus()
                 return
 
             # Ends with /, must be a 'normal' directory then.
@@ -230,15 +237,20 @@ class QGH(object):
             self.handle_file()
             pass
 
-        # Testing, plz ignore
-        if input is 'b':
-            pass
-            #self.listbox = urwid.ListBox(urwid.SimpleListWalker([ItemWidget(1, 'aloha/')]))
-            #self.view.set_body(self.listbox) #works LOOOOOOOOOOOOOOOOOOOOOL
-
-        # Testing!
+        # Testing, plz ignore.
         if input is 'e':
             self.footer_edit()
+
+    def reset_focus(self, search_for=None):
+        # No search_for specified, let's assume we're looking for the current_dir
+        if not search_for: search_for = self.current_dir
+
+        # Otherwise, we have something things to do. Loop through elements until we find out our focus.
+        n = 0
+        for i in self.elements:
+            if i.content == search_for:
+                self.listbox.set_focus(n) # Set it here.
+            n += 1
 
     def footer_edit(self):
         """Handles any user footer editing.
@@ -328,12 +340,10 @@ class QGH(object):
         urwid.connect_signal(self.walker, 'modified', self.update)
 
         # Set the header to the current directory so the user knows where they are. Also display how many items are there.
-        #self.view.set_header(urwid.AttrWrap(urwid.Text(str(self.focus)), 'head'))
         self.view.set_header(urwid.AttrWrap(urwid.Columns([
             urwid.Text(str(self.focus), align='left'),
             urwid.Text('%s item(s)' % (len(leaves)), align='right')
         ]), 'head'))
-        #self.view.set_header(urwid.AttrWrap(urwid.Text('%s | %'), 'head'))
 
         # Finally, set the body.
         self.view.set_body(self.listbox)
@@ -342,7 +352,7 @@ class QGH(object):
         self.view.set_body(urwid.Filler(urwid.Text('hi'), 'top'))
 
     def handle_file(self):
-        self.temp = '/usr/bin/gvim %s'
+        self.temp = '/usr/bin/vim %s'
         if self.last_dir == '': # This means root.
             key        = '__root__/%s' % (self.focus)
             future_dir = '' # So we can restore the directory later on
@@ -409,7 +419,10 @@ class QGH(object):
         self.last_dir = self.focus
 
         # And now reset the body
-        self.handle_directory()
+        if self.last_dir == '':
+            self.handle_root_directory()
+        else:
+            self.handle_directory()
 
 if __name__ == '__main__':
     try:
