@@ -281,10 +281,6 @@ class QGH(object):
         """Called whenever the walker updates, e.g. user presses key.
 
         """
-        #self.focus = self.listbox.get_focus()[0].content
-        #self.view.set_header(urwid.AttrWrap(urwid.Text('selected: %s' % str(self.focus)), 'head')
-
-        #self.view.set_footer(urwid.AttrWrap(urwid.Text(self.current_view, align='center'), 'footer', 'focus'))
         footer_data = self.config.update_footer(self.current_view)
         self.view.set_footer(urwid.AttrWrap(urwid.Text(footer_data, align='center'), 'footer', 'focus'))
 
@@ -297,7 +293,6 @@ class QGH(object):
 
         urwid.connect_signal(self.walker, 'modified', self.update)
 
-        #self.view.set_header(urwid.AttrWrap(urwid.Text('/'), 'head'))
         self.view.set_header(urwid.AttrWrap(urwid.Columns([
             urwid.Text('/', align='left'),
             urwid.Text('%s item(s)' % (len(self.root_elements)), align='right')
