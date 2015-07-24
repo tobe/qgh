@@ -12,6 +12,7 @@ import argparse
 import subprocess
 import base64
 import os
+import re
 from parser import Parser
 from config import Config
 
@@ -244,6 +245,32 @@ class QGH(object):
         if input is 'e':
             self.footer_edit()
 
+        # Redraw
+        if input in ('r', 'R'):
+            self.loop.draw_screen()
+
+        # J/K
+        if input in ('k', 'K'):
+            widget, current_position = self.walker.get_focus()
+            try:
+                widget, previous_position = self.walker.get_prev(current_position)
+                self.walker.set_focus(previous_position)
+            except IndexError: # We are at the very beginning. Nothing to do here.
+                pass
+
+        # J/K
+        if input in ('j', 'J'):
+            widget, current_position = self.walker.get_focus()
+            try:
+                widget, next_position = self.walker.get_next(current_position)
+                self.walker.set_focus(next_position)
+            except IndexError: # We are at the very end. Nothing to do here.
+                pass
+
+        # Search
+        if input is '/':
+            self.footer_edit(True)
+
     def reset_focus(self, search_for=None):
         # No search_for specified, let's assume we're looking for the current_dir
         if not search_for: search_for = self.current_dir
@@ -255,14 +282,40 @@ class QGH(object):
                 self.listbox.set_focus(n) # Set it here.
             n += 1
 
-    def footer_edit(self):
+    def footer_edit(self, search = False):
         """Handles any user footer editing.
 
         """
+        prefix = ':' if not search else 'quick find: '
         self.foot_new = FooterEdit('>> ')
         self.view.set_footer(self.foot_new)
         self.view.set_focus('footer')
-        urwid.connect_signal(self.foot_new, 'done', self.edit_done)
+        if not search:
+            urwid.connect_signal(self.foot_new, 'done', self.edit_done)
+        else:
+            urwid.connect_signal(self.foot_new, 'done', self.go_search)
+
+    def go_search(self, what_for):
+        # Set the focus back to body
+        self.view.set_focus('body')
+
+        # Disconnect
+        urwid.disconnect_signal(self.foot_new, 'done', self.go_search)
+
+        # Check if we got a query...
+        if not what_for: return
+
+        # Construct a regex (yeah...)
+        pattern = r'(.*)' + re.escape(what_for) + r'(.*)'
+
+        # Loop and match
+        n = 0
+        for i in self.elements:
+            m = re.search(pattern, i.content, re.IGNORECASE)
+            if m:
+                self.listbox.set_focus(n)
+                break
+            n = n+1
 
     def edit_done(self, content = None):
         """After footer editing process is pointed here.
@@ -288,6 +341,7 @@ class QGH(object):
         """Restores the original root directory contents when called.
 
         """
+        self.elements = self.root_elements
         self.walker  = urwid.SimpleListWalker(self.root_elements)
         self.listbox = urwid.ListBox(self.walker)
 
