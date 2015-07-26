@@ -212,8 +212,9 @@ class QGH(object):
 
             # Go UP
             if self.focus == '../':
-                self.last_dir = self.last_dir[:-1].split('/') # Split it by /
-                self.last_dir.pop() # Remove the last directory (current dir)
+                self.last_dir    = self.last_dir[:-1].split('/') # Split it by /
+                self.current_dir = self.last_dir[-1] # Set the current directory
+                self.last_dir.pop() # Remove the last directory (current dir) so we can preserve history
 
                 # Join the rest in a list and append / because that's our dir notation.
                 self.last_dir = '/'.join(self.last_dir) + '/'
@@ -225,8 +226,8 @@ class QGH(object):
                 else:
                     self.handle_directory() # It's not root dir, handle it normally.
 
-                    # Reset focus
-                    self.reset_focus()
+                # Reset focus
+                self.reset_focus()
                 return
 
             # Ends with /, must be a 'normal' directory then.
@@ -249,7 +250,7 @@ class QGH(object):
         if input in ('r', 'R'):
             self.loop.draw_screen()
 
-        # J/K
+        # vi nagivation
         if input in ('k', 'K'):
             widget, current_position = self.walker.get_focus()
             try:
@@ -258,7 +259,7 @@ class QGH(object):
             except IndexError: # We are at the very beginning. Nothing to do here.
                 pass
 
-        # J/K
+        # vi navigation
         if input in ('j', 'J'):
             widget, current_position = self.walker.get_focus()
             try:
@@ -267,13 +268,42 @@ class QGH(object):
             except IndexError: # We are at the very end. Nothing to do here.
                 pass
 
+        # search for next find-next
+        if input == 'n':
+            if self.search_ptr == -1: return # Nothing to search for man!
+
+            self.search_ptr += 1 # Bump the ptr
+            try: # If it actually points to an element...
+                self.listbox.set_focus(self.matches[self.search_ptr])
+            except IndexError:
+                pass
+
+            if self.search_ptr >= len(self.matches): # Focus the first element
+                self.search_ptr = 0
+                self.listbox.set_focus(self.matches[0])
+
+        # search for prev find-prev
+        if input == 'N':
+            if self.search_ptr == -1: return # Nothing to search for man!
+
+            self.search_ptr -= 1 # Lower the ptr
+            try:
+                self.listbox.set_focus(self.matches[self.search_ptr])
+            except IndexError:
+                pass
+
+            if self.search_ptr < 0: # Focus the last element
+                self.search_ptr = len(self.matches)-1
+                self.listbox.set_focus(self.matches[self.search_ptr])
+
         # Search
         if input is '/':
             self.footer_edit(True)
 
     def reset_focus(self, search_for=None):
         # No search_for specified, let's assume we're looking for the current_dir
-        if not search_for: search_for = self.current_dir
+        if not search_for:
+            search_for = self.current_dir + '/'
 
         # Otherwise, we have something things to do. Loop through elements until we find out our focus.
         n = 0
@@ -287,7 +317,7 @@ class QGH(object):
 
         """
         prefix = ':' if not search else 'quick find: '
-        self.foot_new = FooterEdit('>> ')
+        self.foot_new = FooterEdit(prefix)
         self.view.set_footer(self.foot_new)
         self.view.set_focus('footer')
         if not search:
@@ -308,14 +338,27 @@ class QGH(object):
         # Construct a regex (yeah...)
         pattern = r'(.*)' + re.escape(what_for) + r'(.*)'
 
+        # Store elements that match the query
+        self.matches = []
+
         # Loop and match
         n = 0
         for i in self.elements:
             m = re.search(pattern, i.content, re.IGNORECASE)
             if m:
-                self.listbox.set_focus(n)
-                break
+                #self.listbox.set_focus(n)
+                #break
+                self.matches.append(n)
             n = n+1
+
+        # Now jump to the first match and then later we can use n N to go around
+        if self.matches:
+            self.listbox.set_focus(self.matches[0])
+
+            # Set the search pointer to point to the first element.
+            self.search_ptr = 0
+        else:
+            self.search_ptr = -1
 
     def edit_done(self, content = None):
         """After footer editing process is pointed here.
