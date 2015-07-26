@@ -12,13 +12,13 @@ Console curses browser for github repo contents.
 * Display all files and directories from a given repository and browse through them in a curses TUI
 * Branch support
 * Open files in your favorite editor.
+* Regex lazy search
 
 #### todo
 * logger view
 
 #### maybe sometime in future
 * List separately files and dirs
-* Regex search through said
 * Themes (colors? :smile:)
 * Issues
 * Repository information (stats, users...)
