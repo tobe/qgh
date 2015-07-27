@@ -179,6 +179,14 @@ class QGH(MainHandler):
             self.handle_file()
             pass
 
+        # also vi-like
+        if input == 'g':
+            self.listbox.set_focus(0)
+
+        # vi-like
+        if input == 'G':
+            self.listbox.set_focus(len(self.elements)-1)
+
         # Testing, plz ignore.
         if input is 'e':
             self.footer_edit()
