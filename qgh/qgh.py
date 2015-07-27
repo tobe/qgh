@@ -62,11 +62,14 @@ class ItemWidget(urwid.WidgetWrap):
 
         self.item = [
             urwid.AttrWrap(urwid.Text('%s' % title), self.color, 'focus'),
-            ('fixed', 4, urwid.Padding(urwid.AttrWrap(urwid.Text(self.identifier), self.color, 'focus'), left=2)),
-            (10, urwid.AttrWrap(urwid.Text('%s' % self.size), self.color, 'focus')),
-            urwid.AttrWrap(urwid.Text('%s' % url.split('/')[-1]), self.color, 'focus')
+            #('fixed', 4, urwid.Padding(urwid.AttrWrap(urwid.Text(self.identifier), self.color, 'focus'), left=2)),
+            ('fixed', 4, urwid.Padding(urwid.Text(self.identifier), left=2)),
+            #(10, urwid.AttrWrap(urwid.Text('%s' % self.size), self.color, 'focus')),
+            (10, urwid.Text('%s' % self.size)),
+            #urwid.AttrWrap(urwid.Text('%s' % url.split('/')[-1]), self.color, 'focus')
+            urwid.Text('%s' % url.split('/')[-1]),
         ]
-        w = urwid.Columns(self.item, 1)
+        w = urwid.AttrMap(urwid.Columns(self.item, 1), 'body', 'focus')
         self.__super.__init__(w)
 
     def selectable (self):
