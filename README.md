@@ -19,8 +19,11 @@ moved [over here](https://github.com/infyhr/qgh/issues?utf8=%E2%9C%93&q=is%3Aope
 
 ### installation
 First, it is recommended you create a Python [virtualenv](https://virtualenv.pypa.io/en/latest/index.html) (`virtualenv env && source env/bin/activate`) to avoid installing dependencies on a system-wide level.  
+
 Next, run `pip install -r requirements.txt` to install the necessary dependencies.  
+
 To use qgh, run `python qgh/qgh.py user/repository [branch]`.  
+
 Example given: `python qgh/qgh.py infyhr/qgh`. `master` is always the default branch and can be ommited then.  
 
 **Note:** If your terminal doesn't redraw properly after using `vim` then `^L` to force a redraw.
