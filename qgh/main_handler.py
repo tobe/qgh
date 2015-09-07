@@ -1,4 +1,4 @@
-#!/usr/bin/python2
+#!/usr/bin/python
 # -*- coding: utf-8 -*-
 
 # Main handler?
@@ -121,7 +121,7 @@ class MainHandler():
         if not leaves:
             self.elements.append(ItemWidget(0, '../'))
         else:
-            for k, v in sorted(leaves.iteritems()):
+            for k, v in sorted(leaves.items()):
                 if not 'url' in v: continue # Not a file. Skipped!
                 element = ItemWidget(i, k, v['size'], v['type'], v['url'])
                 self.elements.append(element)
@@ -186,7 +186,7 @@ class MainHandler():
         try:
             # Now we need to create this file in /tmp
             file_location = '/tmp/%s/%s/%s/%s' % (self.user, self.repository, self.branch, key)
-            fp = open(file_location, 'w')
+            fp = open(file_location, 'wb')
 
             # Check whether it's raw or base64 encoded and write accordingly.
             if result['encoding'] == 'base64':
@@ -201,7 +201,7 @@ class MainHandler():
             fp.close()
 
         except (OSError, IOError) as e:
-            print('Unable to create/write to temp file: %s', str(e))
+            print(('Unable to create/write to temp file: %s', str(e)))
 
         # And open it in the editor using the editor string provided by the user.
         #subprocess.call(self.temp % (file_location))

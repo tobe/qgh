@@ -1,4 +1,4 @@
-#!/usr/bin/python2
+#!/usr/bin/python
 # -*- coding: utf-8 -*-
 
 # Parser.
@@ -6,9 +6,10 @@
 import json
 import sys
 import pprint
-import httplib
+import http.client
 import time
 import datetime
+from functools import reduce
 
 class Parser(object):
     """Retrieves the data from the API and parses it.
@@ -61,7 +62,7 @@ class Parser(object):
         """
         try:
             # Create a HTTPLib object
-            conn = httplib.HTTPSConnection('api.github.com')
+            conn = http.client.HTTPSConnection('api.github.com')
 
             # Define the UA, because Github asks so.
             headers = {'User-Agent': 'qgh/1.0'}
@@ -74,20 +75,20 @@ class Parser(object):
 
             # Query the status code
             if response.status != 200:
-                raise httplib.HTTPException('Did not receive 200 OK, received %s %s instead. Exiting...' % (str(response.status), response.reason))
+                raise http.client.HTTPException('Did not receive 200 OK, received %s %s instead. Exiting...' % (str(response.status), response.reason))
 
             # Read and decode the data, find the hash.
-            data = response.read()
+            data = response.read().decode()
             if not data or len(data) == 0:
-                raise httplib.HTTPException('No data received, len(data) = %d', len(data))
+                raise http.client.HTTPException('No data received, len(data) = %d', len(data))
 
             data = json.loads(data)
 
             conn.close()
 
             return data
-        except httplib.HTTPException as e:
-            print 'HTTPLib error: %s\nFailed lookup for URL %s' % (str(e), url)
+        except http.client.HTTPException as e:
+            print('HTTPLib error: %s\nFailed lookup for URL %s' % (str(e), url))
             sys.exit()
 
     def core_trees(self, data):
@@ -123,7 +124,7 @@ class Parser(object):
         if not data: # If there is nothing return None. How convenient.
             return None
 
-        for k, v in data.iteritems():
+        for k, v in data.items():
             if 'type' in data[k] and data[k]['type'] == 'blob':
                 continue
             # Add to output.
@@ -150,7 +151,7 @@ class Parser(object):
 
         """
         _return = []
-        for k, v in data.iteritems():
+        for k, v in data.items():
             if not k == '__root__': _return.append(k)
 
         _return.sort()
@@ -191,7 +192,7 @@ class Parser(object):
             for x in item.split('/'):
                 p = p.setdefault(x, {})
 
-        for k, v in blobs.iteritems():
+        for k, v in blobs.items():
             p = dict
             items = k.split('/')
             if len(items) == 1:

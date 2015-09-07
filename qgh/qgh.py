@@ -1,4 +1,4 @@
-#!/usr/bin/python2
+#!/usr/bin/python
 # -*- coding: utf-8 -*-
 
 # Main file and main classes.
@@ -7,15 +7,14 @@ import time
 import urwid
 import argparse
 import re
-from parser import Parser
-from config import Config
+import parser
+import config
 from main_handler import MainHandler, ItemWidget
 
 class AppError(Exception):
     pass
 
-class FooterEdit(urwid.Edit):
-    __metaclass__ = urwid.signals.MetaSignals
+class FooterEdit(urwid.Edit, metaclass=urwid.signals.MetaSignals):
     signals = ['done']
 
     def keypress(self, size, key):
@@ -47,7 +46,7 @@ class QGH(MainHandler):
         args = arg_parser.parse_args()
 
         # Set the palette
-        self.config  = Config()
+        self.config  = config.Config()
         self.palette = self.config.get_palette()
 
         # See if we can find / in the remote argument.
@@ -63,7 +62,7 @@ class QGH(MainHandler):
         self.branch     = args.branch
 
         # Pass it onto the Parser object.
-        self.parser = Parser(self.user, self.repository, self.branch)
+        self.parser = parser.Parser(self.user, self.repository, self.branch)
         # Grab the data
         self.data = self.parser.parse()
         # Grab leaves from the data
@@ -87,7 +86,7 @@ class QGH(MainHandler):
 
         # Now do the same for files.
         i = 0
-        for k, v in sorted(self.parser.return_leaves(self.data, '__root__').iteritems()):
+        for k, v in sorted(self.parser.return_leaves(self.data, '__root__').items()):
             element = ItemWidget(i, k, v['size'], v['type'], v['url'])
             self.elements.append(element)
             i = i+1
@@ -331,6 +330,6 @@ if __name__ == '__main__':
     except KeyboardInterrupt:
         print('^C caught, exiting...')
     except ValueError as e:
-        print('ValueError: ' + str(e))
+        print(('ValueError: ' + str(e)))
     except AppError as e:
-        print('qgh error: ' + str(e))
+        print(('qgh error: ' + str(e)))
