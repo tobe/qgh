@@ -9,7 +9,7 @@ import argparse
 import re
 import parser
 import config
-from main_handler import MainHandler, ItemWidget
+from handlers import *
 
 class AppError(Exception):
     pass
@@ -34,7 +34,7 @@ class FooterEdit(urwid.Edit, metaclass=urwid.signals.MetaSignals):
 
         urwid.Edit.keypress(self, size, key)
 
-class QGH(MainHandler):
+class QGH(main.MainHandler):
     """Main class, used to initialize qgh.
 
     """
@@ -44,10 +44,6 @@ class QGH(MainHandler):
         arg_parser.add_argument('remote', help='Remote repository in the following format: user/branch. Example: infyhr/qgh')
         arg_parser.add_argument('branch', nargs='?', default='master', help='The branch to look up. By default this is "master".')
         args = arg_parser.parse_args()
-
-        # Set the palette
-        self.config  = config.Config()
-        self.palette = self.config.get_palette()
 
         # See if we can find / in the remote argument.
         if '/' not in args.remote:
@@ -61,8 +57,13 @@ class QGH(MainHandler):
         self.repository = remote[1]
         self.branch     = args.branch
 
-        # Pass it onto the Parser object.
-        self.parser = parser.Parser(self.user, self.repository, self.branch)
+        # Register all the objects
+        self.config       = config.Config()
+        self.parser       = parser.Parser(self.user, self.repository, self.branch);
+
+        # Set the palette
+        self.palette = self.config.get_palette()
+
         # Grab the data
         self.data = self.parser.parse()
         # Grab leaves from the data
@@ -80,14 +81,14 @@ class QGH(MainHandler):
         # Grab the directories from the root project and pass them onto the ItemWidget
         i = 0
         for directory in self.parser.root_trees(self.data):
-            element = ItemWidget(i, directory + '/')
+            element = main.ItemWidget(i, directory + '/')
             self.elements.append(element)
             i = i+1
 
         # Now do the same for files.
         i = 0
         for k, v in sorted(self.parser.return_leaves(self.data, '__root__').items()):
-            element = ItemWidget(i, k, v['size'], v['type'], v['url'])
+            element = main.ItemWidget(i, k, v['size'], v['type'], v['url'])
             self.elements.append(element)
             i = i+1
             pass
@@ -111,8 +112,6 @@ class QGH(MainHandler):
 
         self.loop = urwid.MainLoop(self.view, self.palette, unhandled_input=self.handle_keystroke)
         urwid.connect_signal(self.walker, 'modified', self.update)
-
-        #self.main_handler = MainHandler()
 
         self.loop.run()
 

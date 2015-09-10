@@ -81,8 +81,8 @@ class MainHandler():
 
         """
         self.elements = self.root_elements
-        self.walker  = urwid.SimpleListWalker(self.root_elements)
-        self.listbox = urwid.ListBox(self.walker)
+        self.walker   = urwid.SimpleListWalker(self.root_elements)
+        self.listbox  = urwid.ListBox(self.walker)
 
         urwid.connect_signal(self.walker, 'modified', self.update)
 
