@@ -3,12 +3,29 @@
 
 # Configuration class used to set colors/API key and such misc stuff.
 
+import json
+import sys
+import os
+
 class Config(object):
     """ Configuration class used to set colors/API key and such misc stuff. """
     def __init__(self):
-        # Read configuration file here and stuff.
+        # Try to open the config file
+        try:
+            fp = open('%s/config.json' % (os.path.dirname(os.path.abspath(__file__))), 'r')
+        except IOError as e:
+            print('Unable to open the config.json file: ' + str(e))
+            sys.exit()
 
-        self.pad_length = 3
+        # Now try to parse it
+        try:
+            self.data = json.load(fp)
+        except ValueError as e:
+            print('Unable to load the JSON file: ' + str(e))
+            sys.exit()
+
+        fp.close() # Clear here
+        self.pad_length = 3 # Padding length
         pass
 
     def get_palette(self):
@@ -17,19 +34,19 @@ class Config(object):
         """
         return [
             # Main body
-            ('body','dark blue', '', 'standout'),
+            ('body', self.data['colors']['body'][0], self.data['colors']['body'][1], self.data['colors']['body'][2]),
             # A folder, subtree/dir
-            ('folder', 'light magenta', '', 'standout'),
+            ('folder', self.data['colors']['folder'][0], self.data['colors']['folder'][1], self.data['colors']['folder'][2]),
             # Element focused/selected
-            ('focus','dark red', '', 'standout'),
+            ('focus', self.data['colors']['focus'][0], self.data['colors']['focus'][1], self.data['colors']['focus'][2]),
             # Footer
-            ('footer', 'light red', 'black', 'standout'),
+            ('footer', self.data['colors']['footer'][0], self.data['colors']['footer'][1], self.data['colors']['footer'][2]),
             # Header
-            ('head','light red', 'black'),
+            ('head', self.data['colors']['head'][0], self.data['colors']['head'][1], self.data['colors']['head'][2]),
             # View in footer
-            ('view', 'light cyan', 'black', 'underline'),
+            ('view', self.data['colors']['view'][0], self.data['colors']['view'][1], self.data['colors']['view'][2]),
             # Focused view
-            ('view_focus', 'light red', 'dark gray', 'underline')
+            ('view_focus', self.data['colors']['view_focus'][0], self.data['colors']['view_focus'][1], self.data['colors']['view_focus'][2])
         ]
 
     def update_footer(self, current_view):

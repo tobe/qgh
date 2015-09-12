@@ -148,7 +148,6 @@ class MainHandler():
         self.view.set_body(urwid.Filler(urwid.Text('hi'), 'top'))
 
     def handle_file(self):
-        self.temp = '/usr/bin/vim %s'
         if self.last_dir == '': # This means root.
             key        = '__root__/%s' % (self.focus)
             future_dir = '' # So we can restore the directory later on
@@ -205,7 +204,7 @@ class MainHandler():
 
         # And open it in the editor using the editor string provided by the user.
         #subprocess.call(self.temp % (file_location))
-        subprocess.call(self.temp % (file_location), shell=True)
+        subprocess.call(self.config.data['editor'] % (file_location), shell=True)
 
         # Redraw or it's messed up
         self.loop.draw_screen()

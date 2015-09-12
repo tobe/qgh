@@ -62,7 +62,7 @@ class QGH(main.MainHandler):
         self.parser       = parser.Parser(self.user, self.repository, self.branch);
 
         # Set the palette
-        self.palette = self.config.get_palette()
+        palette = self.config.get_palette()
 
         # Grab the data
         self.data = self.parser.parse()
@@ -98,7 +98,7 @@ class QGH(main.MainHandler):
 
         # Initialize urwid!
         self.head       = urwid.AttrMap(urwid.Text('selected:'), 'head')
-        footer_text     = ['qgh 1.0 ー', ' %s' % (self.parser.time_taken)]
+        footer_text     = ['qgh 1.0 ー', ' %s ー www.github.com/%s/%s [%s]' % (self.parser.time_taken, self.user, self.repository, self.branch)]
         self.foot       = urwid.AttrMap(urwid.Text(footer_text), 'footer')
         self.walker     = urwid.SimpleListWalker(self.elements)
         self.listbox    = urwid.ListBox(self.walker)
@@ -110,7 +110,7 @@ class QGH(main.MainHandler):
             urwid.Text('%s item(s)' % (len(self.root_elements)), align='right')
         ]), 'head'))
 
-        self.loop = urwid.MainLoop(self.view, self.palette, unhandled_input=self.handle_keystroke)
+        self.loop = urwid.MainLoop(self.view, palette, unhandled_input=self.handle_keystroke)
         urwid.connect_signal(self.walker, 'modified', self.update)
 
         self.loop.run()

@@ -1,0 +1,12 @@
+{
+    "editor": "\/usr\/bin\/gvim %s",
+    "colors": {
+        "body":         ["dark blue", "", "standout"],
+        "folder":       ["light magenta", "", "standout"],
+        "focus":        ["dark red", "", "standout"],
+        "footer":       ["light red", "black", "standout"],
+        "head":         ["light red", "black", ""],
+        "view":         ["light cyan", "black", "underline"],
+        "view_focus":   ["light red", "dark gray", "underline"]
+    }
+}
