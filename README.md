@@ -14,7 +14,7 @@ Console curses browser for github repo contents.
 * Regex lazy search
 * Some basic vi binds
 
-#### todo & maybe sometime in future...
+### todo & maybe sometime in future...
 moved [over here](https://github.com/infyhr/qgh/issues?utf8=%E2%9C%93&q=is%3Aopen+is%3Aissue+label%3Aenhancement) :eyes:
 
 ### installation
@@ -24,6 +24,7 @@ Next, run `pip install -r requirements.txt` to install the necessary dependencie
 
 To use qgh, run `python qgh/qgh.py user/repository [branch]`.  
 
-Example given: `python qgh/qgh.py infyhr/qgh`. `master` is always the default branch and can be ommited then.  
+Example given: `python qgh/qgh.py infyhr/qgh`.  
+`master` is always the default branch and can be ommited then.  
 
 **Note:** If your terminal doesn't redraw properly after using `vim` then `^L` to force a redraw.
