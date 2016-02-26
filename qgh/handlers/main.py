@@ -83,6 +83,8 @@ class MainHandler():
         self.elements = self.root_elements
         self.walker   = urwid.SimpleListWalker(self.root_elements)
         self.listbox  = urwid.ListBox(self.walker)
+        self.focus    = '/'
+        self.last_dir = ''
 
         urwid.connect_signal(self.walker, 'modified', self.update)
 
@@ -138,14 +140,12 @@ class MainHandler():
         # Set the header to the current directory so the user knows where they are. Also display how many items are there.
         self.view.set_header(urwid.AttrWrap(urwid.Columns([
             urwid.Text(str(self.focus), align='left'),
-            urwid.Text('%s item(s)' % (len(leaves)), align='right')
+            #urwid.Text('%s item(s)' % (len(leaves)), align='right')
+            urwid.Text('TEST', align='right')
         ]), 'head'))
 
         # Finally, set the body.
         self.view.set_body(self.listbox)
-
-    def handle_trees(self):
-        self.view.set_body(urwid.Filler(urwid.Text('hi'), 'top'))
 
     def handle_file(self):
         if self.last_dir == '': # This means root.

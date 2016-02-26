@@ -28,6 +28,9 @@ class Config(object):
         self.pad_length = 3 # Padding length
         pass
 
+    def get_version(self):
+        return self.data['version']
+
     def get_palette(self):
         """Returns the color palette.
 

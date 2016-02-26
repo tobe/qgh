@@ -157,6 +157,18 @@ class Parser(object):
         _return.sort()
         return _return
 
+    def all_trees(self):
+        """Returns all the trees, sorted.
+
+        """
+        _return = []
+
+        for object in self.data['tree']:
+            if object['type'] == 'tree':
+                _return.append(object['path'])
+
+        return sorted(_return)
+
     def count_tree(self, data, tree):
         """Counts how many files there are in a given tree.
 

@@ -34,7 +34,7 @@ class FooterEdit(urwid.Edit, metaclass=urwid.signals.MetaSignals):
 
         urwid.Edit.keypress(self, size, key)
 
-class QGH(main.MainHandler):
+class QGH(main.MainHandler, tree.TreeHandler):
     """Main class, used to initialize qgh.
 
     """
@@ -98,7 +98,7 @@ class QGH(main.MainHandler):
 
         # Initialize urwid!
         self.head       = urwid.AttrMap(urwid.Text('selected:'), 'head')
-        footer_text     = ['qgh 1.0 ー', ' %s ー www.github.com/%s/%s [%s]' % (self.parser.time_taken, self.user, self.repository, self.branch)]
+        footer_text     = ['qgh %s ' % (self.config.get_version()), '| %s ー www.github.com/%s/%s [%s]' % (self.parser.time_taken, self.user, self.repository, self.branch)]
         self.foot       = urwid.AttrMap(urwid.Text(footer_text), 'footer')
         self.walker     = urwid.SimpleListWalker(self.elements)
         self.listbox    = urwid.ListBox(self.walker)
@@ -144,6 +144,10 @@ class QGH(main.MainHandler):
 
         if input == 'enter':
             if self.focus != '../': self.current_dir = self.focus # Set the current directory.
+
+            # Update the view -- this is needed if coming from a tree/file view
+            self.current_view = '1: main'
+            self.update()
 
             # Go UP
             if self.focus == '../':
