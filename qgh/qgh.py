@@ -10,7 +10,6 @@ import parser
 import config
 from handlers import *
 
-
 class AppError(Exception): pass
 
 
