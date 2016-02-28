@@ -2,7 +2,6 @@
 # -*- coding: utf-8 -*-
 
 # Main file and main classes.
-
 import time
 import urwid
 import argparse
@@ -11,8 +10,9 @@ import parser
 import config
 from handlers import *
 
-class AppError(Exception):
-    pass
+
+class AppError(Exception): pass
+
 
 class FooterEdit(urwid.Edit, metaclass=urwid.signals.MetaSignals):
     signals = ['done']
@@ -34,15 +34,19 @@ class FooterEdit(urwid.Edit, metaclass=urwid.signals.MetaSignals):
 
         urwid.Edit.keypress(self, size, key)
 
-class QGH(main.MainHandler, tree.TreeHandler):
+
+class QGH:
     """Main class, used to initialize qgh.
 
     """
+
     def __init__(self):
         # Grab the user/repository
-        arg_parser = argparse.ArgumentParser(description='Console curses browser for github repo contents.')
-        arg_parser.add_argument('remote', help='Remote repository in the following format: user/branch. Example: infyhr/qgh')
-        arg_parser.add_argument('branch', nargs='?', default='master', help='The branch to look up. By default this is "master".')
+        arg_parser = argparse.ArgumentParser(description='Console curses browser for Github repo contents.')
+        arg_parser.add_argument('remote',
+                                help='Remote repository in the following format: user/branch. Example: infyhr/qgh')
+        arg_parser.add_argument('branch', nargs='?', default='master',
+                                help='The branch to look up. By default this is "master".')
         args = arg_parser.parse_args()
 
         # See if we can find / in the remote argument.
@@ -53,56 +57,59 @@ class QGH(main.MainHandler, tree.TreeHandler):
         remote = args.remote.split('/')
 
         # Set them here
-        self.user       = remote[0]
+        self.user = remote[0]
         self.repository = remote[1]
-        self.branch     = args.branch
+        self.branch = args.branch
 
         # Register all the objects
-        self.config       = config.Config()
-        self.parser       = parser.Parser(self.user, self.repository, self.branch);
+        self.Config = config.Config()
+        self.Parser = parser.Parser(self.user, self.repository, self.branch);
+        self.TreeHandler = tree.TreeHandler(self)
+        self.MainHandler = main.MainHandler(self)
+        self.FileHandler = file.FileHandler(self)
 
         # Set the palette
-        palette = self.config.get_palette()
+        palette = self.Config.get_palette()  # ATTRIBUTE FIX?
 
         # Grab the data
-        self.data = self.parser.parse()
+        self.data = self.Parser.parse()
         # Grab leaves from the data
-        leaves = self.parser.return_leaves(self.data, '__root__')
+        leaves = self.Parser.return_leaves(self.data, '__root__')
         # Grab trees from the data
-        trees = self.parser.root_trees(self.data)
+        trees = self.Parser.root_trees(self.data)
 
         # Set up class vars
-        self.elements        = [] # Actual ItemWidget elements
-        self.last_dir        = '' # Last directory. Used for everything pretty much.
-        self.current_dir     = None # Current directory. Used for resetting focus.
-        self.current_view    = '1: main' # Current view
-        self.last_id         = 0 # Last ID of the previous directory (ItemWalker)
+        self.elements = []  # Actual ItemWidget elements
+        self.last_dir = ''  # Last directory. Used for everything pretty much.
+        self.current_dir = None  # Current directory. Used for resetting focus.
+        self.current_view = '1: main'  # Current view
+        self.last_id = 0  # Last ID of the previous directory (ItemWalker)
 
         # Grab the directories from the root project and pass them onto the ItemWidget
         i = 0
-        for directory in self.parser.root_trees(self.data):
+        for directory in self.Parser.root_trees(self.data):
             element = main.ItemWidget(i, directory + '/')
             self.elements.append(element)
-            i = i+1
+            i += 1
 
         # Now do the same for files.
         i = 0
-        for k, v in sorted(self.parser.return_leaves(self.data, '__root__').items()):
+        for k, v in sorted(self.Parser.return_leaves(self.data, '__root__').items()):
             element = main.ItemWidget(i, k, v['size'], v['type'], v['url'])
             self.elements.append(element)
-            i = i+1
-            pass
+            i += 1
 
         # Copy this into root_elements so we can cache and restore the root tree when needed.
         self.root_elements = self.elements
 
         # Initialize urwid!
-        self.head       = urwid.AttrMap(urwid.Text('selected:'), 'head')
-        footer_text     = ['qgh %s ' % (self.config.get_version()), '| %s ー www.github.com/%s/%s [%s]' % (self.parser.time_taken, self.user, self.repository, self.branch)]
-        self.foot       = urwid.AttrMap(urwid.Text(footer_text), 'footer')
-        self.walker     = urwid.SimpleListWalker(self.elements)
-        self.listbox    = urwid.ListBox(self.walker)
-        self.view       = urwid.Frame(urwid.AttrWrap(self.listbox, 'body'), header=self.head, footer=self.foot)
+        self.head = urwid.AttrMap(urwid.Text('selected:'), 'head')
+        footer_text = ['qgh %s ' % (self.Config.get_version),
+                       '| %s ー www.github.com/%s/%s [%s]' % (self.Parser.time_taken, self.user, self.repository, self.branch)]
+        self.foot = urwid.AttrMap(urwid.Text(footer_text), 'footer')
+        self.walker = urwid.SimpleListWalker(self.elements)
+        self.listbox = urwid.ListBox(self.walker)
+        self.view = urwid.Frame(urwid.AttrWrap(self.listbox, 'body'), header=self.head, footer=self.foot)
 
         # Set the header to show root.
         self.view.set_header(urwid.AttrWrap(urwid.Columns([
@@ -110,6 +117,7 @@ class QGH(main.MainHandler, tree.TreeHandler):
             urwid.Text('%s item(s)' % (len(self.root_elements)), align='right')
         ]), 'head'))
 
+        # Run the main loop
         self.loop = urwid.MainLoop(self.view, palette, unhandled_input=self.handle_keystroke)
         urwid.connect_signal(self.walker, 'modified', self.update)
 
@@ -122,7 +130,7 @@ class QGH(main.MainHandler, tree.TreeHandler):
             input: The keystroke itself.
 
         """
-        self.focus = self.listbox.get_focus()[0].content # Grab the focused element
+        self.focus = self.listbox.get_focus()[0].content  # Grab the focused element
 
         if input in ('q', 'Q'):
             raise urwid.ExitMainLoop()
@@ -130,20 +138,20 @@ class QGH(main.MainHandler, tree.TreeHandler):
         if input == '1':
             self.current_view = '1: main'
             self.update()
-            self.handle_root_directory()
+            self.MainHandler.handle_root_directory()
 
         if input == '2':
             self.current_view = '2: trees'
             self.update()
-            self.handle_trees()
+            self.TreeHandler.handle_trees()
 
         if input == '3':
             self.current_view = '3: files'
             self.update()
-            self.handle_files()
+            self.FileHandler.handle_files()
 
         if input == 'enter':
-            if self.focus != '../': self.current_dir = self.focus # Set the current directory.
+            if self.focus != '../': self.current_dir = self.focus  # Set the current directory.
 
             # Update the view -- this is needed if coming from a tree/file view
             self.current_view = '1: main'
@@ -151,19 +159,19 @@ class QGH(main.MainHandler, tree.TreeHandler):
 
             # Go UP
             if self.focus == '../':
-                self.last_dir    = self.last_dir[:-1].split('/') # Split it by /
-                self.current_dir = self.last_dir[-1] # Set the current directory
-                self.last_dir.pop() # Remove the last directory (current dir) so we can preserve history
+                self.last_dir = self.last_dir[:-1].split('/')  # Split it by /
+                self.current_dir = self.last_dir[-1]  # Set the current directory
+                self.last_dir.pop()  # Remove the last directory (current dir) so we can preserve history
 
                 # Join the rest in a list and append / because that's our dir notation.
                 self.last_dir = '/'.join(self.last_dir) + '/'
-                self.focus = self.last_dir # Set the focus to the last used directory.
+                self.focus = self.last_dir  # Set the focus to the last used directory.
 
-                if(self.focus == '/'): # If we're dealing with the root tree/directory...
-                    self.last_dir = '' # Set the last_dir to nothing because it's root. Next SUB directory will append to this.
-                    self.handle_root_directory() # Then handle it accordingly.
+                if (self.focus == '/'):  # If we're dealing with the root tree/directory...
+                    self.last_dir = ''  # Set the last_dir to nothing because it's root. Next SUB directory will append to this.
+                    self.MainHandler.handle_root_directory()  # Then handle it accordingly.
                 else:
-                    self.handle_directory() # It's not root dir, handle it normally.
+                    self.MainHandler.handle_directory()  # It's not root dir, handle it normally.
 
                 # Reset focus
                 self.reset_focus()
@@ -171,15 +179,15 @@ class QGH(main.MainHandler, tree.TreeHandler):
 
             # Ends with /, must be a 'normal' directory then.
             elif self.focus[-1] == '/':
-                self.focus      = self.listbox.get_focus()[0].content # Grab the current focus
-                self.focus      = self.last_dir + self.focus # Set the focus to include the last directory + currently focused directory.
-                self.last_dir   = self.focus # And the last directory used is the currently focused one. Simple as that (lol, not really).
-                self.handle_directory() # Handle the directory here.
+                self.focus = self.listbox.get_focus()[0].content  # Grab the current focus
+                self.focus = self.last_dir + self.focus  # Set the focus to include the last directory + currently focused directory.
+                self.last_dir = self.focus  # And the last directory used is the currently focused one. Simple as that (lol, not really).
+                self.MainHandler.handle_directory()  # Handle the directory here.
                 return
 
             # It's not a directory nor we're moving up a level. So it's a file then?
-            self.handle_file()
-            pass
+            self.FileHandler.handle_file()
+            self.loop.draw_screen()
 
         # also vi-like
         if input == 'g':
@@ -187,7 +195,7 @@ class QGH(main.MainHandler, tree.TreeHandler):
 
         # vi-like
         if input == 'G':
-            self.listbox.set_focus(len(self.elements)-1)
+            self.listbox.set_focus(len(self.elements) - 1)
 
         # Testing, plz ignore.
         if input is 'e':
@@ -203,7 +211,7 @@ class QGH(main.MainHandler, tree.TreeHandler):
             try:
                 widget, previous_position = self.walker.get_prev(current_position)
                 self.walker.set_focus(previous_position)
-            except IndexError: # We are at the very beginning. Nothing to do here.
+            except IndexError:  # We are at the very beginning. Nothing to do here.
                 pass
 
         # vi navigation
@@ -212,35 +220,35 @@ class QGH(main.MainHandler, tree.TreeHandler):
             try:
                 widget, next_position = self.walker.get_next(current_position)
                 self.walker.set_focus(next_position)
-            except IndexError: # We are at the very end. Nothing to do here.
+            except IndexError:  # We are at the very end. Nothing to do here.
                 pass
 
         # search for next find-next
         if input == 'n':
-            if self.search_ptr == -1: return # Nothing to search for man!
+            if self.search_ptr == -1: return  # Nothing to search for man!
 
-            self.search_ptr += 1 # Bump the ptr
-            try: # If it actually points to an element...
+            self.search_ptr += 1  # Bump the ptr
+            try:  # If it actually points to an element...
                 self.listbox.set_focus(self.matches[self.search_ptr])
             except IndexError:
                 pass
 
-            if self.search_ptr >= len(self.matches): # Focus the first element
+            if self.search_ptr >= len(self.matches):  # Focus the first element
                 self.search_ptr = 0
                 self.listbox.set_focus(self.matches[0])
 
         # search for prev find-prev
         if input == 'N':
-            if self.search_ptr == -1: return # Nothing to search for man!
+            if self.search_ptr == -1: return  # Nothing to search for man!
 
-            self.search_ptr -= 1 # Lower the ptr
+            self.search_ptr -= 1  # Lower the ptr
             try:
                 self.listbox.set_focus(self.matches[self.search_ptr])
             except IndexError:
                 pass
 
-            if self.search_ptr < 0: # Focus the last element
-                self.search_ptr = len(self.matches)-1
+            if self.search_ptr < 0:  # Focus the last element
+                self.search_ptr = len(self.matches) - 1
                 self.listbox.set_focus(self.matches[self.search_ptr])
 
         # Search
@@ -256,10 +264,10 @@ class QGH(main.MainHandler, tree.TreeHandler):
         n = 0
         for i in self.elements:
             if i.content == search_for:
-                self.listbox.set_focus(n) # Set it here.
+                self.listbox.set_focus(n)  # Set it here.
             n += 1
 
-    def footer_edit(self, search = False):
+    def footer_edit(self, search=False):
         """Handles any user footer editing.
 
         """
@@ -293,10 +301,10 @@ class QGH(main.MainHandler, tree.TreeHandler):
         for i in self.elements:
             m = re.search(pattern, i.content, re.IGNORECASE)
             if m:
-                #self.listbox.set_focus(n)
-                #break
+                # self.listbox.set_focus(n)
+                # break
                 self.matches.append(n)
-            n = n+1
+            n = n + 1
 
         # Now jump to the first match and then later we can use n N to go around
         if self.matches:
@@ -307,7 +315,7 @@ class QGH(main.MainHandler, tree.TreeHandler):
         else:
             self.search_ptr = -1
 
-    def edit_done(self, content = None):
+    def edit_done(self, content=None):
         """After footer editing process is pointed here.
 
         Args:
@@ -317,6 +325,7 @@ class QGH(main.MainHandler, tree.TreeHandler):
         self.view.set_focus('body')
         urwid.disconnect_signal(self.foot_new, 'done', self.edit_done)
         if content:
+            # Command processor here?
             self.view.set_body(urwid.Filler(urwid.Text(content), 'top'))
         self.view.set_footer(self.foot)
 
@@ -324,8 +333,9 @@ class QGH(main.MainHandler, tree.TreeHandler):
         """Called whenever the walker updates, e.g. user presses key.
 
         """
-        footer_data = self.config.update_footer(self.current_view)
+        footer_data = self.Config.update_footer(self.current_view)
         self.view.set_footer(urwid.AttrWrap(urwid.Text(footer_data, align='center'), 'footer', 'focus'))
+
 
 if __name__ == '__main__':
     try:

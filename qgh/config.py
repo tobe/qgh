@@ -28,8 +28,14 @@ class Config(object):
         self.pad_length = 3 # Padding length
         pass
 
+    @property
     def get_version(self):
         return self.data['version']
+
+    @property
+    def get_editor(self):
+        return self.data['editor']
+
 
     def get_palette(self):
         """Returns the color palette.
